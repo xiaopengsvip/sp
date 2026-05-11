@@ -1,31 +1,31 @@
-# EV视频
+# EV视频 Responsive Pro
 
-类似抖音/TikTok 的短视频聚合站，支持 Vercel 一键部署。
+Vercel 可直接部署的短视频播放平台。
 
-## 功能
-- PC 三栏专业布局
-- 移动端竖屏全屏滑动
-- 动态模糊背景
-- 自动播放、静音、全屏、点赞
-- 鼠标滚轮切换
-- 键盘控制：↑↓ 切换，空格暂停，M静音，F全屏
-- Serverless API 代理解析 YuJn 接口
-- 18+ 进入确认
-- 本地观看历史
+## 本版改进
 
-## 本地运行
+- PC / 移动端独立响应式，不互相影响
+- 去掉强制成人确认页，改成进入后轻提示，不影响播放
+- 当前接入 37 个视频接口，接口来源为上传的 YuJn API 目录
+- `/api/video?meta=1` 可查看实际接入数量和分类数量
+- 接口详情缓存、失败接口短暂熔断、并发预加载限制为 3，减少卡顿
+- 支持清屏播放、自动滑动播放、PC滚轮切换、键盘快捷键、移动端手势切换
+- 加载调试面板保留，可观察接口成功/失败/预加载状态
+
+## 部署
+
 ```bash
 npm install
-npm run dev
-```
-
-## 部署 Vercel
-```bash
-npm i -g vercel
+npm run build
 vercel
 ```
 
-## 接口说明
-`/api/video?category=recommend`
+## 快捷键
 
-分类：recommend, hot, dance, fashion, scenery, anime, handsome, random
+- ↑ / ↓：上一条 / 下一条
+- 空格：播放 / 暂停
+- M：静音
+- F：全屏
+- T：影院模式
+- C：清屏
+- A：自动滑动播放
