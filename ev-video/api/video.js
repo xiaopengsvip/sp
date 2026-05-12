@@ -1,64 +1,18 @@
 const UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36';
-
-const catalog={
-  recommend:[261,88,224,295,89,304,302,284,305,358,286,285,257,280,191,230,194,349,87,167,166,288,303,300,384,383,225],
-  hot:[261,167,89,88,285,166,257,284,305,304,280,302,281,224,295,384,303,300],
-  dance:[89,304,286,159,280,257,302,261,88,303],
-  fashion:[302,285,256,281,284,257,305,358,167,166,288],
-  scenery:[191,230,208,194,349],
-  anime:[194,349,283,172,208],
-  handsome:[87],
-  creators:[300,303,383,384,225,221,254,255,263],
-  random:[261,88,224,295,191,230,194,349,89,304,302,284,305,358,286,285,257,280,167,166,87,288,303,300,384,383,225,221,254,255,263]
-};
-
-const names={
-  261:'小姐姐随机视频',88:'小姐姐视频',224:'综合随机视频',295:'快手随机视频',89:'热舞视频',304:'丝滑舞蹈',280:'变装系列',302:'穿搭系列',284:'清纯系列',305:'完美身材',358:'怼脸自拍',286:'慢摇系列',285:'吊带系列',191:'PC风景视频',230:'海边晚霞',194:'动漫视频',349:'漫展视频',167:'黑丝视频',166:'白丝视频',257:'甜妹系列',256:'JK洛丽塔',281:'街拍系列',159:'抖音变装',283:'COS系列',172:'ACG动漫',87:'帅哥视频',208:'二次元房间背景',288:'汉服古风',303:'鞠婧祎系列',300:'章若楠系列',384:'女大学生系列',383:'抖音瞳瞳系列',225:'抖音潇潇随机',221:'蛇姐视频',263:'双倍快乐视频',254:'欲梦视频',255:'漫画芋视频'
-};
+const catalog={recommend:[261,88,224,295,89,304,302,284,305,358,286,285,257,280,191,230,194,349,87,167,166,288,303,300,384,383,225],hot:[261,167,89,88,285,166,257,284,305,304,280,302,281,224,295,384,303,300],dance:[89,304,286,159,280,257,302,261,88,303],fashion:[302,285,256,281,284,257,305,358,167,166,288],scenery:[191,230,208,194,349],anime:[194,349,283,172,208],handsome:[87],creators:[300,303,383,384,225,221,254,255,263],random:[261,88,224,295,191,230,194,349,89,304,302,284,305,358,286,285,257,280,167,166,87,288,303,300,384,383,225,221,254,255,263]};
+const names={261:'小姐姐随机视频',88:'小姐姐视频',224:'综合随机视频',295:'快手随机视频',89:'热舞视频',304:'丝滑舞蹈',280:'变装系列',302:'穿搭系列',284:'清纯系列',305:'完美身材',358:'怼脸自拍',286:'慢摇系列',285:'吊带系列',191:'PC风景视频',230:'海边晚霞',194:'动漫视频',349:'漫展视频',167:'黑丝视频',166:'白丝视频',257:'甜妹系列',256:'JK洛丽塔',281:'街拍系列',159:'抖音变装',283:'COS系列',172:'ACG动漫',87:'帅哥视频',208:'二次元房间背景',288:'汉服古风',303:'鞠婧祎系列',300:'章若楠系列',384:'女大学生系列',383:'抖音瞳瞳系列',225:'抖音潇潇随机',221:'蛇姐视频',263:'双倍快乐视频',254:'欲梦视频',255:'漫画芋视频'};
 const API_COUNT=Object.keys(names).length;
 const detailCache=new Map();
 const badApi=new Map();
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function shuffle(a){return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1])}
 function absUrl(u){try{return new URL(u,'https://api.yujn.cn').toString()}catch{return u}}
-function isBad(id){const t=badApi.get(id);return t&&Date.now()-t<120000}
+function isBad(id){const t=badApi.get(id);return t&&Date.now()-t<180000}
 function markBad(id){badApi.set(id,Date.now())}
-async function fetchText(url,timeout=5200){
- const c=new AbortController();const t=setTimeout(()=>c.abort(),timeout);
- try{const r=await fetch(url,{redirect:'follow',signal:c.signal,headers:{'user-agent':UA,'referer':'https://api.yujn.cn/'}});
-  const ct=r.headers.get('content-type')||'';const final=r.url;
-  if(/video|image|audio/.test(ct)||/\.(mp4|m3u8|webm|mov|jpg|jpeg|png|gif)(\?|$)/i.test(final))return final;
-  return await r.text();
- }finally{clearTimeout(t)}
-}
-function extractUrl(raw){if(!raw)return'';let s=String(raw).trim();
- try{const j=JSON.parse(s);const stack=[j];while(stack.length){const x=stack.shift();if(!x)continue;if(typeof x==='string'){const u=extractUrl(x);if(u)return u}else if(Array.isArray(x))stack.push(...x);else if(typeof x==='object'){for(const k of ['video','url','data','mp4','src','play','link','image','pic','img'])if(x[k])stack.unshift(x[k]);for(const v of Object.values(x))stack.push(v)}}}catch{}
- const m=s.match(/https?:\\?\/\\?\/[^\s"'<>]+?\.(?:mp4|m3u8|webm|mov|jpg|jpeg|png|gif)(?:\?[^\s"'<>]*)?/i)||s.match(/https?:\\?\/\\?\/[^\s"'<>]+/i);
- return m?m[0].replaceAll('\\/','/'):'';
-}
-async function getCandidates(id){
- if(detailCache.has(id))return detailCache.get(id);
- const detail=`https://api.yujn.cn/?action=interface&id=${id}`;
- const html=await fetchText(detail,6500);
- const urls=[...new Set((html.match(/https?:\/\/api\.yujn\.cn\/api\/[^\s"'<>]+/g)||[]).map(u=>u.replace(/&amp;/g,'&')))].filter(u=>!u.includes('action=interface'));
- const candidates=urls.length?urls:[`https://api.yujn.cn/api/xjj.php`,`https://api.yujn.cn/api/zzxjj.php`,`https://api.yujn.cn/api/rewu.php`,`https://api.yujn.cn/api/ksxjj.php`];
- detailCache.set(id,candidates.slice(0,8));
- return detailCache.get(id);
-}
+async function fetchText(url,timeout=5200){const c=new AbortController();const t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{redirect:'follow',signal:c.signal,headers:{'user-agent':UA,'referer':'https://api.yujn.cn/'}});const ct=r.headers.get('content-type')||'';const final=r.url;if(/video|image|audio/.test(ct)||/\.(mp4|m3u8|webm|mov|jpg|jpeg|png|gif)(\?|$)/i.test(final))return final;return await r.text()}finally{clearTimeout(t)}}
+function extractUrl(raw){if(!raw)return'';let s=String(raw).trim();try{const j=JSON.parse(s);const stack=[j];while(stack.length){const x=stack.shift();if(!x)continue;if(typeof x==='string'){const u=extractUrl(x);if(u)return u}else if(Array.isArray(x))stack.push(...x);else if(typeof x==='object'){for(const k of ['video','url','data','mp4','src','play','link','image','pic','img'])if(x[k])stack.unshift(x[k]);for(const v of Object.values(x))stack.push(v)}}}catch{}const m=s.match(/https?:\\?\/\\?\/[^\s"'<>]+?\.(?:mp4|m3u8|webm|mov|jpg|jpeg|png|gif)(?:\?[^\s"'<>]*)?/i)||s.match(/https?:\\?\/\\?\/[^\s"'<>]+/i);return m?m[0].replaceAll('\\/','/'):''}
+async function getCandidates(id){if(detailCache.has(id))return detailCache.get(id);const detail=`https://api.yujn.cn/?action=interface&id=${id}`;const html=await fetchText(detail,6500);const urls=[...new Set((html.match(/https?:\/\/api\.yujn\.cn\/api\/[^\s"'<>]+/g)||[]).map(u=>u.replace(/&amp;/g,'&')))].filter(u=>!u.includes('action=interface'));const candidates=urls.length?urls:[`https://api.yujn.cn/api/xjj.php`,`https://api.yujn.cn/api/zzxjj.php`,`https://api.yujn.cn/api/rewu.php`,`https://api.yujn.cn/api/ksxjj.php`];detailCache.set(id,candidates.slice(0,8));return detailCache.get(id)}
 async function tryCandidate(u){const body=await fetchText(absUrl(u),6500);return extractUrl(body)||(/^(https?:\/\/)/.test(body)?body.trim():'')}
-async function resolveById(id){
- const candidates=await getCandidates(id);
- const queue=candidates.slice(0,5);
- const wrapped=queue.map(u=>tryCandidate(u).then(got=>got?{url:got,source:u}:Promise.reject(new Error('空地址'))));
- try{return await Promise.any(wrapped)}catch(e){throw new Error('接口暂时没有返回可播放地址')}
-}
-export default async function handler(req,res){
- res.setHeader('Access-Control-Allow-Origin','*');
- if(req.query.meta==='1')return res.status(200).json({ok:true,apiCount:API_COUNT,categories:Object.fromEntries(Object.entries(catalog).map(([k,v])=>[k,v.length])),uniqueConnected:[...new Set(Object.values(catalog).flat())].length});
- res.setHeader('Cache-Control','no-store, max-age=0');
- try{
-  const category=String(req.query.category||'recommend');let list=(catalog[category]||catalog.recommend).filter(id=>!isBad(id));if(!list.length)list=catalog.recommend;
-  const id=Number(req.query.id||pick(list));
-  const data=await resolveById(id);
-  res.status(200).json({ok:true,id,title:names[id]||'EV随机内容',category,url:data.url,source:data.source,cover:data.url,apiCount:API_COUNT});
- }catch(e){const bad=Number(req.query.id||0);if(bad)markBad(bad);res.status(200).json({ok:false,message:e.message,apiCount:API_COUNT});}
-}
+async function resolveById(id){const candidates=await getCandidates(id);const queue=candidates.slice(0,5);const wrapped=queue.map(u=>tryCandidate(u).then(got=>got?{url:got,source:u}:Promise.reject(new Error('空地址'))));try{return await Promise.any(wrapped)}catch{throw new Error('接口暂时没有返回可播放地址')}}
+async function buildOne(id,category){const data=await resolveById(id);return{ok:true,id,title:names[id]||'EV随机内容',category,url:data.url,source:data.source,cover:data.url,apiCount:API_COUNT,views:(Math.random()*90+10).toFixed(1)+'万',likes:Math.floor(600+Math.random()*98000)}}
+export default async function handler(req,res){res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('X-EV-API-Count',String(API_COUNT));if(req.query.meta==='1'){res.setHeader('Cache-Control','public, s-maxage=3600, stale-while-revalidate=86400');return res.status(200).json({ok:true,apiCount:API_COUNT,categories:Object.fromEntries(Object.entries(catalog).map(([k,v])=>[k,v.length])),uniqueConnected:[...new Set(Object.values(catalog).flat())].length})}res.setHeader('Cache-Control','public, s-maxage=20, stale-while-revalidate=180');try{const category=String(req.query.category||'recommend');let list=(catalog[category]||catalog.recommend).filter(id=>!isBad(id));if(!list.length)list=catalog.recommend;const batch=Math.max(1,Math.min(10,Number(req.query.batch||1)));if(batch>1){const ids=shuffle(list).slice(0,Math.min(list.length,batch*2));const out=[];for(const id of ids){try{const item=await buildOne(id,category);if(!out.some(x=>x.url===item.url))out.push(item);if(out.length>=batch)break}catch{markBad(id)}}return res.status(200).json({ok:out.length>0,items:out,apiCount:API_COUNT,message:out.length?'':'暂时没有可播放地址'})}const id=Number(req.query.id||pick(list));try{return res.status(200).json(await buildOne(id,category))}catch(e){markBad(id);throw e}}catch(e){res.status(200).json({ok:false,message:e.message,apiCount:API_COUNT})}}
